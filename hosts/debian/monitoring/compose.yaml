@@ -4,7 +4,7 @@
 # Grafana + Alloy state stays in ./data (small).
 services:
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:13.2.3
     container_name: grafana
     user: "1000:1000"
     ports:
@@ -27,7 +27,7 @@ services:
     depends_on: [prometheus, loki]
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.15.0
     container_name: prometheus
     user: "1000:1000"
     command:
@@ -50,7 +50,7 @@ services:
     restart: unless-stopped
 
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:3.7.8
     container_name: loki
     user: "1000:1000"
     command: -config.file=/etc/loki/loki.yml
@@ -68,7 +68,7 @@ services:
     restart: unless-stopped
 
   alloy:
-    image: grafana/alloy:latest
+    image: grafana/alloy:v1.20.1
     container_name: alloy
     command:
       - run
@@ -88,7 +88,7 @@ services:
     depends_on: [loki]
 
   cadvisor:
-    image: ghcr.io/google/cadvisor:latest
+    image: ghcr.io/google/cadvisor:v0.60.6
     container_name: cadvisor
     command:
       - --docker_only=true
@@ -111,7 +111,7 @@ services:
   # Host network so disk/network/CPU numbers are the machine's, not a container's.
   # Listens only on the monitoring bridge gateway, so Prometheus can reach it and the LAN cannot.
   node-exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:v1.12.1
     container_name: node-exporter
     network_mode: host
     pid: host
