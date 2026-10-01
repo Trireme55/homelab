@@ -1,6 +1,6 @@
 services:
   filebrowser:
-    image: filebrowser/filebrowser:latest
+    image: filebrowser/filebrowser:v2.63.23
     container_name: filebrowser
     restart: unless-stopped
     entrypoint: ["tini", "--", "sh", "-c", "umask 002 && exec /init.sh"]   # so new files are group-writable for Samba users
