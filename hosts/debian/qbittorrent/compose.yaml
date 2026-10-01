@@ -5,7 +5,7 @@
 # VPN is WireGuard (NordLynx); it used to be OpenVPN.
 services:
   gluetun:
-    image: qmcgaw/gluetun:latest
+    image: qmcgaw/gluetun:v3.41.3
     container_name: gluetun
     restart: unless-stopped
     cap_add:
@@ -28,7 +28,7 @@ services:
     cpus: 2.0   # was 0.5: the cap throttled the tunnel (76% of the time at ~190 Mbit/s)
 
   qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
+    image: lscr.io/linuxserver/qbittorrent:5.2.4
     container_name: qbittorrent
     restart: unless-stopped
     network_mode: service:gluetun
