@@ -1,0 +1,8 @@
+.env
+*.bak*
+*.log
+**/ts-state/
+**/data/
+**/config/
+api_*.json
+*.qcow2
