@@ -1,0 +1,68 @@
+logging {
+  level = "warn"
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
+
+// ---- Docker containers, including short-lived ones (Wolf app sessions). ----
+// New containers are picked up within ~5s, so their logs survive after the container is deleted.
+discovery.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "5s"
+}
+
+discovery.relabel "containers" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    target_label  = "compose_project"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "compose_service"
+  }
+}
+
+loki.source.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  targets          = discovery.relabel.containers.output
+  labels           = { source = "docker" }
+  refresh_interval = "5s"
+  forward_to       = [loki.write.loki.receiver]
+}
+
+// ---- systemd journal: sshd logins, sudo, kernel, tailscaled, NetworkManager, docker daemon... ----
+loki.relabel "journal" {
+  forward_to = []
+
+  rule {
+    source_labels = ["__journal__systemd_unit"]
+    target_label  = "unit"
+  }
+  rule {
+    source_labels = ["__journal_priority_keyword"]
+    target_label  = "level"
+  }
+  rule {
+    source_labels = ["__journal_syslog_identifier"]
+    target_label  = "syslog_identifier"
+  }
+}
+
+loki.source.journal "journal" {
+  path          = "/var/log/journal"
+  max_age       = "24h"
+  labels        = { source = "journal" }
+  relabel_rules = loki.relabel.journal.rules
+  forward_to    = [loki.write.loki.receiver]
+}

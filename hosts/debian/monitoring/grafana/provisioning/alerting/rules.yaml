@@ -1,0 +1,96 @@
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: system-health
+    folder: Alerts
+    interval: 1m
+    rules:
+      - uid: disk-usage-high
+        title: "Disk usage high"
+        condition: C
+        for: 5m
+        noDataState: NoData
+        execErrState: Error
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: { from: 60, to: 0 }
+            model:
+              editorMode: code
+              instant: true
+              range: false
+              refId: A
+              expr: 100 - ((node_filesystem_avail_bytes{fstype="ext4"} * 100) / node_filesystem_size_bytes{fstype="ext4"})
+          - refId: C
+            datasourceUid: "__expr__"
+            model:
+              type: threshold
+              refId: C
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [90]
+        labels: {}
+        annotations:
+          summary: "{{ $labels.instance }} mountpoint {{ $labels.mountpoint }} is above 90% disk usage."
+
+      - uid: memory-usage-high
+        title: "Memory usage high"
+        condition: C
+        for: 10m
+        noDataState: NoData
+        execErrState: Error
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: { from: 60, to: 0 }
+            model:
+              editorMode: code
+              instant: true
+              range: false
+              refId: A
+              expr: 100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))
+          - refId: C
+            datasourceUid: "__expr__"
+            model:
+              type: threshold
+              refId: C
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [90]
+        labels: {}
+        annotations:
+          summary: "{{ $labels.instance }} is above 90% memory usage."
+
+      - uid: disk-rapid-write-drop
+        title: "Unexpected rapid disk write (>35GB/hr)"
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: { from: 60, to: 0 }
+            model:
+              editorMode: code
+              instant: true
+              range: false
+              refId: A
+              expr: delta(node_filesystem_avail_bytes{fstype="ext4"}[1h])
+          - refId: C
+            datasourceUid: "__expr__"
+            model:
+              type: threshold
+              refId: C
+              expression: A
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [-37580963840]
+        labels: {}
+        annotations:
+          summary: "{{ $labels.instance }} mountpoint {{ $labels.mountpoint }} lost more than 35GB of free space in the last hour — check for a runaway process."

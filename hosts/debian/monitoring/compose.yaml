@@ -1,0 +1,132 @@
+# Metrics (Prometheus + node_exporter + cAdvisor), logs (Loki + Alloy), UI (Grafana).
+# Grafana is on 127.0.0.1:3000; HTTPS on the tailnet via: sudo tailscale serve --bg --https=3000 http://127.0.0.1:3000
+# Retention: metrics 90d (15GB cap), logs 90d. Loki + Prometheus data live on the HDD (/mnt/storage/monitoring);
+# Grafana + Alloy state stays in ./data (small).
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    user: "1000:1000"
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks: [monitoring]
+    mem_limit: 768m
+    restart: unless-stopped
+    depends_on: [prometheus, loki]
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    user: "1000:1000"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=90d
+      - --storage.tsdb.retention.size=15GB
+      - --web.enable-lifecycle
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - type: bind
+        source: /mnt/storage/monitoring/prometheus
+        target: /prometheus
+        bind:
+          create_host_path: false   # fail to start if the HDD is not mounted, never write to the SSD
+    networks: [monitoring]
+    mem_limit: 1g
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    user: "1000:1000"
+    command: -config.file=/etc/loki/loki.yml
+    ports:
+      - "127.0.0.1:3100:3100"
+    volumes:
+      - ./loki/loki.yml:/etc/loki/loki.yml:ro
+      - type: bind
+        source: /mnt/storage/monitoring/loki
+        target: /loki
+        bind:
+          create_host_path: false   # fail to start if the HDD is not mounted, never write to the SSD
+    networks: [monitoring]
+    mem_limit: 1g
+    restart: unless-stopped
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - ./data/alloy:/var/lib/alloy/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/log/journal:/var/log/journal:ro
+      - /run/log/journal:/run/log/journal:ro
+      - /etc/machine-id:/etc/machine-id:ro
+    networks: [monitoring]
+    mem_limit: 512m
+    restart: unless-stopped
+    depends_on: [loki]
+
+  cadvisor:
+    image: ghcr.io/google/cadvisor:latest
+    container_name: cadvisor
+    command:
+      - --docker_only=true
+      - --housekeeping_interval=15s
+      - --store_container_labels=false
+      - --disable_metrics=percpu,sched,tcp,udp,advtcp,referenced_memory,resctrl,cpu_topology,hugetlb
+    privileged: true
+    devices:
+      - /dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks: [monitoring]
+    mem_limit: 768m
+    restart: unless-stopped
+
+  # Host network so disk/network/CPU numbers are the machine's, not a container's.
+  # Listens only on the monitoring bridge gateway, so Prometheus can reach it and the LAN cannot.
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    network_mode: host
+    pid: host
+    command:
+      - --path.rootfs=/host
+      - --web.listen-address=172.30.90.1:9100
+    volumes:
+      - /:/host:ro,rslave
+    mem_limit: 128m
+    restart: unless-stopped
+    depends_on: [prometheus]
+
+networks:
+  monitoring:
+    ipam:
+      config:
+        - subnet: 172.30.90.0/24
+          gateway: 172.30.90.1
