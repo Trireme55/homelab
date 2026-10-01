@@ -1,0 +1,59 @@
+# Optional NordVPN exit node for the tailnet ("NYC-exit"). Always running; each device opts in
+# by choosing NYC-exit as its exit node (or "None" to go back to normal). Nothing is forced.
+# Tailscale shares Gluetun's network namespace, so exit-node traffic leaves via the Nord tunnel
+# and Gluetun's firewall blocks everything if the tunnel drops (no leak of the home IP).
+# Secrets live in .env (chmod 600). Tailscale logs in once via `tailscale up` (see below); state is in ./ts-state.
+# Separate from ../qbittorrent's Gluetun. Deliberately no cpus cap (a cap throttled that one).
+services:
+  gluetun-exit:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun-exit
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv6.conf.all.forwarding=1
+    environment:
+      - TZ=${TZ:-UTC}
+      - VPN_SERVICE_PROVIDER=nordvpn
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${NORD_WG_PRIVATE_KEY}
+      - SERVER_COUNTRIES=United States
+      - SERVER_CITIES=New York
+    volumes:
+      # allow forwarding tailscale0 <-> tun0 (Gluetun's firewall is default-drop)
+      - ./iptables/post-rules.txt:/iptables/post-rules.txt:ro
+    mem_limit: 512m
+
+  tailscale-exit:
+    image: tailscale/tailscale:stable
+    container_name: tailscale-exit
+    restart: unless-stopped
+    network_mode: service:gluetun-exit
+    depends_on:
+      gluetun-exit:
+        condition: service_healthy
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    # Plain tailscaled instead of containerboot: containerboot gives up (and regenerates the login URL)
+    # after 60s without a login. First run: docker exec tailscale-exit tailscale up --hostname=NYC-exit
+    # --advertise-exit-node --accept-dns=false ; prefs and login persist in ./ts-state afterwards.
+    # The two `ip rule`s (in Gluetun's shared netns): 90 sends replies for tailnet addresses back out tailscale0
+    # (Gluetun's rule 101 would push them into tun0); 91 lets tailscaled's own packets (fwmark 0x80000) use the
+    # normal home route so peers connect directly instead of via DERP. Client traffic stays on the Nord tunnel.
+    command:
+      - sh
+      - -c
+      - >-
+        ip rule add to 100.64.0.0/10 lookup 52 pref 90 2>/dev/null;
+        ip rule add fwmark 0x80000/0xff0000 lookup main pref 91 2>/dev/null;
+        exec tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/var/run/tailscale/tailscaled.sock
+    volumes:
+      - ./ts-state:/var/lib/tailscale
+    mem_limit: 256m

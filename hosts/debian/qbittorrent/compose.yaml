@@ -1,0 +1,47 @@
+# qBittorrent behind Gluetun (NordVPN). qBittorrent has no network of its own: all its traffic
+# goes through Gluetun's tunnel, and Gluetun's firewall blocks everything if the VPN drops
+# (kill switch). The WebUI is published on Gluetun, only on localhost and the Tailscale address.
+# Credentials live in .env (chmod 600). NordVPN does not support port forwarding.
+# VPN is WireGuard (NordLynx); it used to be OpenVPN.
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TZ=${TZ:-UTC}
+      - VPN_SERVICE_PROVIDER=nordvpn
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${NORD_WG_PRIVATE_KEY}
+      - SERVER_COUNTRIES=${NORD_COUNTRY:-United States}
+      - SERVER_CATEGORIES=P2P
+      # let replies to WebUI clients on the LAN and Tailscale bypass the tunnel
+      - FIREWALL_OUTBOUND_SUBNETS=${LAN_SUBNET:-192.168.1.0/24},100.64.0.0/10
+    ports:
+      - 127.0.0.1:8080:8080
+      - ${TS_IP}:8080:8080
+    mem_limit: 256m
+    cpus: 2.0   # was 0.5: the cap throttled the tunnel (76% of the time at ~190 Mbit/s)
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    restart: unless-stopped
+    network_mode: service:gluetun
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-UTC}
+      - WEBUI_PORT=8080
+    volumes:
+      - ./config:/config
+      - /mnt/storage/torrents:/downloads
+    mem_limit: 2g
+    cpus: 2

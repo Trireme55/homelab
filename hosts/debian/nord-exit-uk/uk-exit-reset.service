@@ -1,0 +1,17 @@
+[Unit]
+Description=Reset endpoint for the UK Tailscale exit node (landing page link)
+After=docker.service
+Requires=docker.service
+
+[Service]
+User=homelab
+Group=docker
+ExecStart=/usr/bin/python3 /opt/homelab/hosts/debian/nord-exit-uk/reset-server.py
+Restart=on-failure
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
