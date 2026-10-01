@@ -1,0 +1,26 @@
+# Sonarr (TV library manager). Joins qBittorrent's own docker network so it can
+# reach the WebUI as "gluetun" (qBittorrent runs with network_mode: service:gluetun,
+# so gluetun is what actually owns the port in that shared network namespace).
+services:
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-UTC}
+    volumes:
+      - /mnt/storage/sonarr/config:/config
+      - /mnt/storage/media:/media
+      - /mnt/storage/torrents:/downloads
+    ports:
+      - "127.0.0.1:8989:8989"
+      - "${TS_IP}:8989:8989"
+    networks:
+      - qbtnet
+
+networks:
+  qbtnet:
+    name: qbittorrent_default
+    external: true

@@ -1,0 +1,26 @@
+# Radarr (movie library manager). Joins qBittorrent's own docker network so it can
+# reach the WebUI as "gluetun" (qBittorrent runs with network_mode: service:gluetun,
+# so gluetun is what actually owns the port in that shared network namespace).
+services:
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-UTC}
+    volumes:
+      - /mnt/storage/radarr/config:/config
+      - /mnt/storage/media:/media
+      - /mnt/storage/torrents:/downloads
+    ports:
+      - "127.0.0.1:7878:7878"
+      - "${TS_IP}:7878:7878"
+    networks:
+      - qbtnet
+
+networks:
+  qbtnet:
+    name: qbittorrent_default
+    external: true

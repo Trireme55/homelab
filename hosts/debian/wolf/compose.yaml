@@ -1,0 +1,31 @@
+services:
+  wolf:
+    image: ghcr.io/games-on-whales/wolf:stable
+    container_name: wolf
+    environment:
+      # Pin the RX 5600 XT (amdgpu, PCI 03:00.0). The Intel iGPU (i915,
+      # PCI 00:02.0) is now enumerated first as renderD128, so the AMD card is
+      # renderD129. If the numbering changes again, check /dev/dri/by-path/.
+      - WOLF_RENDER_NODE=/dev/dri/renderD129
+      # Diagnostic: zero-copy fails to negotiate with two GPUs present (Intel
+      # iGPU + AMD). Remove this line to go back to the zero-copy default.
+      - WOLF_USE_ZERO_COPY=FALSE
+      # Errors only from GStreamer. At the default level an orphaned audio pipeline (pulsesrc)
+      # logs a warning per loop pass and filled the SSD at ~44 MB/s once.
+      - GST_DEBUG=1
+    volumes:
+      - /etc/wolf/:/etc/wolf
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+      - /dev/:/dev/:rw
+      - /run/udev:/run/udev:rw
+      # Per-profile data (Sims 3 prefixes etc.) lives on the HDD; /etc/wolf/profile-data/<p> are symlinks to here.
+      # Same path inside and outside the container so the symlinks resolve for Wolf and for Docker bind mounts.
+      - /mnt/storage/wolf-profile-data:/mnt/storage/wolf-profile-data
+    device_cgroup_rules:
+      - 'c 13:* rmw'
+    devices:
+      - /dev/dri
+      - /dev/uinput
+      - /dev/uhid
+    network_mode: host
+    restart: unless-stopped
