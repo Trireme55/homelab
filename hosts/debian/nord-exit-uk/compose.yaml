@@ -7,7 +7,7 @@
 # `tailscale up` (see below); state is in ./ts-state. Deliberately no cpus cap (a cap throttled qbit's Gluetun).
 services:
   gluetun-exit-uk:
-    image: qmcgaw/gluetun:latest
+    image: qmcgaw/gluetun:v3.41.3
     container_name: gluetun-exit-uk
     restart: unless-stopped
     cap_add:
@@ -30,7 +30,7 @@ services:
     mem_limit: 512m
 
   tailscale-exit-uk:
-    image: tailscale/tailscale:stable
+    image: tailscale/tailscale:v1.102.5
     container_name: tailscale-exit-uk
     restart: unless-stopped
     network_mode: service:gluetun-exit-uk
