@@ -1,0 +1,180 @@
+{
+  "_comment": "Manual genre/lang fixes, keyed by tvg-id or by channel name (Ⓖ Ⓢ Ⓨ Ⓓ Ⓞ marks ignored). genre: news movies kids music radio doc general other sports. lang: eng spa fra other. Anything not listed uses the automatic rules in build_playlist.py.",
+  "BBC Home": {
+    "genre": "doc"
+  },
+  "Bloomberg": {
+    "genre": "news"
+  },
+  "Bloomberg TV": {
+    "genre": "news"
+  },
+  "Cheddar": {
+    "genre": "news"
+  },
+  "TalkTV": {
+    "genre": "news"
+  },
+  "FOX Live Now": {
+    "genre": "news"
+  },
+  "Biz TV": {
+    "genre": "news"
+  },
+  "Global News Saskatoon": {
+    "genre": "news"
+  },
+  "CBS News": {
+    "genre": "news",
+    "lang": "eng"
+  },
+  "LiveNOW from FOX": {
+    "genre": "news",
+    "lang": "eng"
+  },
+  "Al Jazeera": {
+    "genre": "news",
+    "lang": "eng"
+  },
+  "DW": {
+    "genre": "news",
+    "lang": "eng"
+  },
+  "SABC News": {
+    "genre": "news",
+    "lang": "eng"
+  },
+  "France24English.fr": {
+    "genre": "news",
+    "lang": "eng"
+  },
+  "France24French.fr": {
+    "genre": "news",
+    "lang": "fra"
+  },
+  "Public Sénat": {
+    "genre": "news",
+    "lang": "fra"
+  },
+  "3/24": {
+    "genre": "news",
+    "lang": "spa"
+  },
+  "Bon Dia": {
+    "genre": "news",
+    "lang": "spa"
+  },
+  "Buzzr": {
+    "genre": "movies"
+  },
+  "Drybar Comedy": {
+    "genre": "movies"
+  },
+  "Great! Romance": {
+    "genre": "movies"
+  },
+  "Pop": {
+    "genre": "kids"
+  },
+  "Now Rock": {
+    "genre": "music"
+  },
+  "Pluto TV Documentaries": {
+    "genre": "doc"
+  },
+  "Rev'n": {
+    "genre": "sports"
+  },
+  "QVC Beauty": {
+    "genre": "other"
+  },
+  "QVC Extra": {
+    "genre": "other"
+  },
+  "QVC Style": {
+    "genre": "other"
+  },
+  "QVC UK": {
+    "genre": "other"
+  },
+  "TBN UK": {
+    "genre": "other"
+  },
+  "Hobby Maker": {
+    "genre": "other"
+  },
+  "98FM": {
+    "genre": "radio"
+  },
+  "FM104": {
+    "genre": "radio"
+  },
+  "Dublin's Q102": {
+    "genre": "radio"
+  },
+  "Spin 103.8": {
+    "genre": "radio"
+  },
+  "Sunshine 106.8": {
+    "genre": "radio"
+  },
+  "Today FM": {
+    "genre": "radio"
+  },
+  "BBC Asian Network": {
+    "genre": "radio"
+  },
+  "Radio Nova": {
+    "genre": "radio"
+  },
+  "Newstalk": {
+    "genre": "radio"
+  },
+  "RNE para todos": {
+    "genre": "radio",
+    "lang": "spa"
+  },
+  "France Inter": {
+    "genre": "radio",
+    "lang": "fra"
+  },
+  "10 Bold": {
+    "genre": "general"
+  },
+  "Peer TV South Tyrol": {
+    "genre": "general",
+    "lang": "other"
+  },
+  "Savoir Média": {
+    "genre": "doc",
+    "lang": "fra"
+  },
+  "ICI Montreal": {
+    "genre": "general",
+    "lang": "fra"
+  },
+  "ICI Télé HD": {
+    "genre": "general",
+    "lang": "fra"
+  },
+  "ETB1": {
+    "lang": "spa"
+  },
+  "IB3 Global": {
+    "lang": "spa"
+  },
+  "TV3Cat": {
+    "lang": "spa"
+  },
+  "MBC Bollywood": {
+    "lang": "other"
+  },
+  "EWTN": {
+    "genre": "other",
+    "lang": "eng"
+  },
+  "EWTN Español": {
+    "genre": "other",
+    "lang": "spa"
+  }
+}

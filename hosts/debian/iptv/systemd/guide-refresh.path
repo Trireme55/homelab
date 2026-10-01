@@ -1,0 +1,9 @@
+[Unit]
+Description=Start a Live TV guide rebuild when the landing page button asks for one
+
+[Path]
+PathExists=/opt/homelab/hosts/debian/iptv/run/refresh.request
+Unit=guide-refresh.service
+
+[Install]
+WantedBy=multi-user.target

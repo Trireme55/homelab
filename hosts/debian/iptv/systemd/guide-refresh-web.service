@@ -1,0 +1,17 @@
+[Unit]
+Description=Landing page "refresh the Live TV guide" endpoint
+After=network.target
+
+[Service]
+User=homelab
+Group=homelab
+ExecStart=/usr/bin/python3 /opt/homelab/hosts/debian/iptv/refresh-web.py
+Restart=on-failure
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/homelab/hosts/debian/iptv/run
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
