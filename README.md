@@ -53,6 +53,6 @@ start without it.
 
 ## Notes
 
-- Image tags are mostly `latest`; pin them before relying on any of this.
+- Image tags are pinned to specific versions (set October 2026), except Wolf and its JumpStart base image, which follow the project's `stable` and `edge` channels. To upgrade, change the tag on purpose, then run `docker compose pull && docker compose up -d` in that service's folder.
 - The Grafana alert contact point reads its Telegram token from the
   environment. See `hosts/debian/monitoring/.env.example`.
