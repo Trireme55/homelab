@@ -1,0 +1,9 @@
+[Unit]
+Description=Enable reboot on power restoration
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/setpci -s 0:1f.0 0xa4.b=0
+
+[Install]
+WantedBy=multi-user.target
