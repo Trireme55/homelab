@@ -6,7 +6,7 @@
 # Separate from ../qbittorrent's Gluetun. Deliberately no cpus cap (a cap throttled that one).
 services:
   gluetun-exit:
-    image: qmcgaw/gluetun:latest
+    image: qmcgaw/gluetun:v3.41.3
     container_name: gluetun-exit
     restart: unless-stopped
     cap_add:
@@ -29,7 +29,7 @@ services:
     mem_limit: 512m
 
   tailscale-exit:
-    image: tailscale/tailscale:stable
+    image: tailscale/tailscale:v1.102.5
     container_name: tailscale-exit
     restart: unless-stopped
     network_mode: service:gluetun-exit
